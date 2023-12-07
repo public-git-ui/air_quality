@@ -1,6 +1,6 @@
 from datetime import datetime, date, timedelta
 import pandas as pd
-
+import numpy as np
     
 def convert_format_and_clean_up(value): 
     try: 

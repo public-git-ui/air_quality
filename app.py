@@ -3,10 +3,7 @@ import pandas as pd
 from io import StringIO
 import numpy as np
 import io
-import altair as alt
-
 from datetime import datetime
-
 import seaborn as sns
 
 from data_process import process_sensors_data
