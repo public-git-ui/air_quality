@@ -8,9 +8,9 @@ import seaborn as sns
 
 from data_process import process_sensors_data
 
-st.set_page_config(page_title='air')
+st.set_page_config(page_title='DATA: Data Analytics Tool for Africa')
 
-st.title("Air hack")
+st.title("DATA: Data Analytics Tool for Africa")
 
 @st.cache_resource
 def read_base_data():
@@ -19,19 +19,6 @@ def read_base_data():
 @st.cache_data
 def process_data(df):
 	return process_sensors_data(df)
-
-def line_plot(df, parameter, date):
-	df = df[(df.parameter == parameter) & (df.day_hour.str.slice(0, 10) == str(date))]
-	df["hour"] = df.day_hour.str.slice(11,13)
-	st.line_chart(data = df, x = "hour", y = "recorded_and_predicted_value", color = "location")
-
-
-def plot_daily_values(df, parameter, date):
-    df = df[(df.parameter == parameter) & (df.day_hour.str.slice(0, 10) == str(date))]
-    df["hour"] = df.day_hour.str.slice(11,13)
-    plot = sns.lineplot(data = df, x = "hour", y = "recorded_and_predicted_value", hue = "location")
-    st.pyplot(plot.get_figure())
-
 
 
 if 'all_data' not in st.session_state:
@@ -57,16 +44,20 @@ date = st.date_input(
     format="YYYY-MM-DD",
 )
 
-
-
 if date is not None and parameter is not None:
-	st.map(df, latitude='latitude',
-    	longitude='longitude',
-    	size='recorded_and_predicted_value')
-	plot_daily_values(df, parameter, date)
+	df = df[(df.parameter == parameter) & (df.day_hour.str.slice(0, 10) == str(date))]
+	df["hour"] = df.day_hour.str.slice(11,13)
+	plot = sns.lineplot(data = df, x = "hour", y = "recorded_and_predicted_value", hue = "location")
+	st.pyplot(plot.get_figure())
+
 
 
 st.dataframe(data=df)
 
+st.write("Sensor locations")
+
+st.map(df, latitude='latitude',
+	longitude='longitude',
+	size='recorded_and_predicted_value')
 
 	
