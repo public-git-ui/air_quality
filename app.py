@@ -5,6 +5,7 @@ import numpy as np
 import io
 from datetime import datetime
 import seaborn as sns
+import matplotlib.pyplot as plt 
 
 from data_process import process_sensors_data
 
@@ -48,6 +49,14 @@ if date is not None and parameter is not None:
 	df = df[(df.parameter == parameter) & (df.day_hour.str.slice(0, 10) == str(date))]
 	df["hour"] = df.day_hour.str.slice(11,13)
 	plot = sns.lineplot(data = df, x = "hour", y = "recorded_and_predicted_value", hue = "location")
+	sns.move_legend(plot, "upper left", bbox_to_anchor=(1, 1))
+
+	for ind, label in enumerate(plot.get_xticklabels()):
+	    if ind % 3 == 0:  # every 10th label is kept
+	        label.set_visible(True)
+	    else:
+	        label.set_visible(False)
+
 	st.pyplot(plot.get_figure())
 
 
