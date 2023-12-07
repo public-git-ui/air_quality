@@ -3,14 +3,38 @@ import pandas as pd
 from io import StringIO
 import numpy as np
 import io
+import altair as alt
+
+from datetime import datetime
+
+import seaborn as sns
+
+from data_process import process_sensors_data
 
 st.set_page_config(page_title='air')
 
 st.title("Air hack")
 
 @st.cache_resource
-def read_data():
-	return pd.read_pickle('sensors_dataset.pkl')
+def read_base_data():
+	return pd.read_pickle('sample_hackathon_data.pkl')
+
+@st.cache_data
+def process_data(df):
+	return process_sensors_data(df)
+
+def line_plot(df, parameter, date):
+	df = df[(df.parameter == parameter) & (df.day_hour.str.slice(0, 10) == str(date))]
+	df["hour"] = df.day_hour.str.slice(11,13)
+	st.line_chart(data = df, x = "hour", y = "recorded_and_predicted_value", color = "location")
+
+
+def plot_daily_values(df, parameter, date):
+    df = df[(df.parameter == parameter) & (df.day_hour.str.slice(0, 10) == str(date))]
+    df["hour"] = df.day_hour.str.slice(11,13)
+    plot = sns.lineplot(data = df, x = "hour", y = "recorded_and_predicted_value", hue = "location")
+    st.pyplot(plot.get_figure())
+
 
 
 if 'all_data' not in st.session_state:
@@ -23,25 +47,29 @@ if uploaded_file is not None:
     st.session_state['all_data'].append(new_data)
 
 
-df = pd.concat(st.session_state['all_data'] + [read_data()])
+df = pd.concat(st.session_state['all_data'] + [read_base_data()])
 
-param = st.selectbox('Parameter', np.sort(df.parameter.astype(str).unique()))
-
-if param is not None:
-	df = df[df.parameter == param]
-
-hour_of_day = st.selectbox('Hour of day', np.sort(df.timestamp.str.slice(0,13).unique()))
-
-if hour_of_day is not None:
-	df = df[df.timestamp.str.slice(0,13) == hour_of_day]
+parameter = st.selectbox('Parameter', ['PM 10', 'Humidity', 'Temperature', 'PM 1', 'PM 2.5'], index=0)
 
 
-df = df.iloc[:100]
+df = process_data(df)
+	
+date = st.date_input(
+    "Date",
+    datetime.strptime(max(df.day_hour.str.slice(0, 10)), "%Y-%m-%d"),
+    format="YYYY-MM-DD",
+)
 
-st.map(df, latitude='latitude',
-    longitude='longitude',
-    size='value')
 
 
-with st.expander('Raw data'):
-	st.dataframe(data=df)
+if date is not None and parameter is not None:
+	st.map(df, latitude='latitude',
+    	longitude='longitude',
+    	size='recorded_and_predicted_value')
+	plot_daily_values(df, parameter, date)
+
+
+st.dataframe(data=df)
+
+
+	
